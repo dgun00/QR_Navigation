@@ -1,0 +1,372 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --light-text: #ffffff;
+    --dark-text: #333333;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        url('../images/main_background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    width: 100%;
+}
+
+.main-header  {
+    color: var(--light-text);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.building-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 90%;
+    max-width: 800px;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+.building-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.building-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.building-card h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.floor-buttons button {
+    background: var(--primary-color);
+    color: var(--light-text);
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.floor-buttons button:hover {
+    background: #2980b9;
+}
+
+/* --- 층별 지도 화면 스타일 --- */
+.floor-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- 지도 컨테이너 스타일 --- */
+#map-container {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden; /* 스크롤바 대신 리사이징되므로 hidden 처리 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- (수정) 이미지, 캔버스, 마커 관계 설정 --- */
+#map-container > img {
+    position: relative;
+    /* flex-shrink: 0; <-- 제거 */
+    /* 컨테이너 크기에 맞춰 이미지 리사이징 */
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* 이미지 비율 유지 */
+}
+#map-container > canvas,
+#map-container > #marker {
+    position: absolute;
+    /* top, left, transform은 JS에서 동적으로 설정하므로 제거 */
+}
+
+#controls {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.location-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.input-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-right: 2rem;
+}
+
+.input-wrapper label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+    padding-left: 15px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    outline: none;
+}
+
+#swap-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    margin-top: 1.5rem;
+}
+
+#find-path-btn {
+    width: 100%;
+    background: var(--secondary-color);
+    color: var(--light-text);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+#find-path-btn:hover {
+    background: #27ae60;
+}
+
+#search-results {
+    position: absolute;
+    bottom: calc(100% - 70px);
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: none;
+    z-index: 10;
+}
+
+/* --- 상단 네비게이션 패널 스타일 --- */
+#nav-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+#home-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    background-color: var(--secondary-color);
+    color: var(--light-text);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+#home-btn:hover {
+    background-color: #27ae60;
+}
+
+#floor-selector {
+    position: relative;
+    flex-grow: 1;
+    margin-left: 1rem;
+}
+
+#building-title-btn {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    color: var(--dark-text);
+    text-align: center;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#building-title-btn::after {
+    content: ' ▾';
+}
+
+#floor-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 250px;
+    z-index: 20;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+}
+
+#floor-list.show {
+    display: block;
+}
+
+#floor-list .building-header {
+    padding: 0.5rem 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+#floor-list .building-header:first-child {
+    margin-top: 0;
+}
+
+#floor-list li button {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+#floor-list li button:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+#floor-list li button.active {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    border-color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* 기타 스타일 */
+.quick-access-section {
+    width: 90%;
+    max-width: 800px;
+    margin-top: 2rem;
+}
+.icon-grid {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+    color: var(--dark-text);
+    transition: color 0.3s ease;
+}
+.icon-btn:hover {
+    color: var(--primary-color);
+}
+.icon-btn .icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+.icon-btn:hover .icon-circle {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    transform: scale(1.1);
+}
+.icon-btn span {
+    font-size: 0.9rem;
+    font-weight: 400;
+}
