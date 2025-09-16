@@ -8,11 +8,11 @@ class Node(models.Model):
         ('ELEVATOR', 'Elevator'),
         ('STAIRS', 'Stairs'),
         ('ETC', 'Etc'),
-    ]
+    ] # 관리자 페이지용
 
     # QR코드에 저장될 고유 ID (이 필드가 핵심입니다!)
     qr_id = models.CharField(max_length=100, unique=True, null=True, blank=True, help_text="이 노드가 QR코드 위치일 경우, QR코드에 저장될 고유 ID")
-    
+    building = models.CharField(max_length=100, null=True, help_text= "건물 이름")
     name = models.CharField(max_length=100, help_text="노드의 이름 또는 설명 (예: 1층 정문 앞 QR)")
     floor = models.CharField(max_length=10, help_text="층 정보 (예: 1F, B1)") # 프론트엔드가 이 정보로 지도 이미지를 선택
     # PNG 이미지의 (0,0)을 좌상단으로 가정하고, y는 세로축, x는 가로축 좌표

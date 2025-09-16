@@ -5,4 +5,4 @@ from .models import Node
 class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
-        fields = ['id', 'qr_id', 'name', 'floor', 'pixel_x', 'pixel_y', 'node_type', 'description']
+        fields = ['id', 'qr_id','building', 'name', 'floor', 'pixel_x', 'pixel_y', 'node_type', 'description']

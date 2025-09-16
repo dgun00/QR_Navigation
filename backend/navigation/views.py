@@ -16,6 +16,7 @@ class NodeByQrIdView(APIView):
         except Node.DoesNotExist:
             return Response({"error": "해당 QR ID의 노드를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
+    
 # 목적지 검색 및 전체 노드 목록
 class NodeSearchView(APIView):
     def get(self, request):
