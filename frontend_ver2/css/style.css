@@ -372,7 +372,8 @@ body {
 }
 
 /* --- 현재 위치 마커 스타일 (새로 추가) --- */
-#marker {
+#marker {/* */
+    position: absolute; /*9/17추가*/
     width: 20px;
     height: 20px;
     background-color: #3498db; /* 파란색 배경 */

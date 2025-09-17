@@ -77,48 +77,120 @@ document.addEventListener('DOMContentLoaded', () => {
             startNode = node;
             startInput.value = node.name;
             startInput.disabled = true;
-            updateMarkerPosition(node.pixel_x, node.pixel_y);
+            updateScaleAndPositions();
         } catch (error) {
             console.error(error); alert(error.message);
         }
     };
 
 
-    // --- 마커 위치 업데이트 함수에 스케일 적용 ---
-    const updateMarkerPosition = (x, y) => {
-        const scaledX = x * scale;
-        const scaledY = y * scale;
-        marker.style.transform = `translateX(${scaledX}px) translateY(${scaledY}px)`;
-        marker.style.display = 'block';
-    };
+    // // --- 마커 위치 업데이트 함수에 스케일 적용 ---
+    // const updateMarkerPosition = (x, y) => {
+    //     // const scaledX = x * scale;
+    //     // const scaledY = y * scale;
+    //     // marker.style.transform = `translateX(${scaledX}px) translateY(${scaledY}px)`;
+    //     marker.style.left = `${x * scale}px`;
+    //     marker.style.top = `${y * scale}px`; // 9/17 수정
+
+    //     marker.style.display = 'block';
+    // }; // 9/17 주석처리
 
 
-    // --- 스케일 계산 및 캔버스/마커 위치 조정 함수 ---
+    // // --- 스케일 계산 및 캔버스/마커 위치 조정 함수 ---
+    // const updateScaleAndPositions = () => {
+    //     if (!floorMapImage || !floorMapImage.naturalWidth) return;
+
+    //     // 1. 스케일 계산
+    //     scale = floorMapImage.clientWidth / floorMapImage.naturalWidth;
+
+    //     // 2. 캔버스와 마커의 위치/크기를 이미지에 맞춤
+    //     const rect = floorMapImage.getBoundingClientRect();
+    //     const containerRect = mapContainer.getBoundingClientRect();
+
+    //     // 3. 컨테이너 내부에서 이미지의 실제 시작 위치(오프셋) 계산 (가장 중요한 부분)
+    //     const offsetX = imageRect.left - containerRect.left;
+    //     const offsetY = imageRect.top - containerRect.top;
+    //       // 4. 캔버스 위치/크기를 이미지와 정확히 일치시키기
+    //     canvas.style.left = `${offsetX}px`;
+    //     canvas.style.top = `${offsetY}px`;
+    //     canvas.style.width = `${imageRect.width}px`;
+    //     canvas.style.height = `${imageRect.height}px`;
+
+    //     // 5. 현재 상태에 맞는 노드(출발지 또는 경로상 노드) 찾기
+    //     const currentNode = (fullPath.length > 0) ? fullPath[pathIndex] : startNode;
+
+    //     // 6. 경로와 마커 위치를 최종적으로 업데이트
+    //     if (fullPath.length > 0) {
+    //         // 경로가 있으면 경로를 다시 그림
+    //         const currentFloorPath = fullPath.filter(node => node.building === building && node.floor === floor);
+    //         drawPath(currentFloorPath);
+    //     }
+        
+    //     if (currentNode) {
+    //         // (핵심) 최종 마커 위치 = 이미지 오프셋 + (노드의 원본 좌표 * 스케일)
+    //         marker.style.left = `${offsetX + currentNode.pixel_x * scale}px`;
+    //         marker.style.top = `${offsetY + currentNode.pixel_y * scale}px`;
+    //         marker.style.display = 'block';
+    //     }
+
+    //     // canvas.style.left = `${rect.left - containerRect.left}px`;
+    //     // canvas.style.top = `${rect.top - containerRect.top}px`;
+    //     // canvas.style.width = `${rect.width}px`;
+    //     // canvas.style.height = `${rect.height}px`;
+
+    //     // marker.style.left = canvas.style.left;
+    //     // marker.style.top = canvas.style.top; /*9/17 주석처리*/
+
+    //     // // 3. 스케일 변경에 따라 경로 다시 그리기
+    //     // if (fullPath.length > 0) {
+    //     //     const currentFloorPath = fullPath.filter(node => node.building === building && node.floor === floor);
+    //     //     drawPath(currentFloorPath);
+    //     //     if(pathIndex > 0) {
+    //     //          updateMarkerPosition(fullPath[pathIndex].pixel_x, fullPath[pathIndex].pixel_y);
+    //     //     }
+    //     // }
+        
+      
+    // };
+    // floor.js
+
+    // --- 1. 이 함수를 아래 코드로 교체하세요 ---
     const updateScaleAndPositions = () => {
+        // 이미지 로드 전이라면 함수 종료
         if (!floorMapImage || !floorMapImage.naturalWidth) return;
 
-        // 1. 스케일 계산
+        // 1. 스케일(비율) 계산
         scale = floorMapImage.clientWidth / floorMapImage.naturalWidth;
 
-        // 2. 캔버스와 마커의 위치/크기를 이미지에 맞춤
-        const rect = floorMapImage.getBoundingClientRect();
+        // 2. 지도 이미지와 부모 컨테이너의 현재 위치/크기 정보 가져오기
+        const imageRect = floorMapImage.getBoundingClientRect(); // ★★★ 변수명을 rect -> imageRect 로 수정 ★★★
         const containerRect = mapContainer.getBoundingClientRect();
 
-        canvas.style.left = `${rect.left - containerRect.left}px`;
-        canvas.style.top = `${rect.top - containerRect.top}px`;
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
+        // 3. 컨테이너 내부에서 이미지의 실제 시작 위치(오프셋) 계산
+        const offsetX = imageRect.left - containerRect.left;
+        const offsetY = imageRect.top - containerRect.top;
 
-        marker.style.left = canvas.style.left;
-        marker.style.top = canvas.style.top;
+        // 4. 캔버스 위치/크기를 이미지와 정확히 일치시키기
+        canvas.style.left = `${offsetX}px`;
+        canvas.style.top = `${offsetY}px`;
+        canvas.style.width = `${imageRect.width}px`;
+        canvas.style.height = `${imageRect.height}px`;
 
-        // 3. 스케일 변경에 따라 경로 다시 그리기
+        // 5. 현재 상태에 맞는 노드(출발지 또는 경로상 노드) 찾기
+        const currentNode = (fullPath.length > 0) ? fullPath[pathIndex] : startNode;
+
+        // 6. 경로와 마커 위치를 최종적으로 업데이트
         if (fullPath.length > 0) {
+            // 경로가 있으면 경로를 다시 그림
             const currentFloorPath = fullPath.filter(node => node.building === building && node.floor === floor);
             drawPath(currentFloorPath);
-            if(pathIndex > 0) {
-                 updateMarkerPosition(fullPath[pathIndex].pixel_x, fullPath[pathIndex].pixel_y);
-            }
+        }
+        
+        if (currentNode) {
+            // (핵심) 최종 마커 위치 = 이미지 오프셋 + (노드의 원본 좌표 * 스케일)
+            marker.style.left = `${offsetX + currentNode.pixel_x * scale}px`;
+            marker.style.top = `${offsetY + currentNode.pixel_y * scale}px`;
+            marker.style.display = 'block';
         }
     };
 
@@ -154,57 +226,83 @@ document.addEventListener('DOMContentLoaded', () => {
         pathIndex = fullPath.findIndex(node => node.building === building && node.floor === floor);
         if (pathIndex === -1) return;
         const startPos = fullPath[pathIndex];
-        updateMarkerPosition(startPos.pixel_x, startPos.pixel_y);
+        // updateMarkerPosition(startPos.pixel_x, startPos.pixel_y);// 9/17수정
+        updateScaleAndPositions(); // 9/17 추가
         animateMarker();
     };
 
     const animateMarker = () => {
         if (pathIndex >= fullPath.length - 1) {
-            alert("목적지에 도착했습니다!"); return;
+            alert("목적지에 도착했습니다!");
+            return;
         }
         const currentPoint = fullPath[pathIndex];
         const nextPoint = fullPath[pathIndex + 1];
 
         if (currentPoint.is_transition) {
-            handleTransition(currentPoint); return;
+            handleTransition(currentPoint);
+            return;
         }
 
-        const currentPos = { 
-            x: parseFloat(marker.style.transform.match(/translateX\(([^p]+)px\)/)[1]),
-            y: parseFloat(marker.style.transform.match(/translateY\(([^p]+)px\)/)[1])
+        // 현재 마커의 위치(오프셋 포함)를 다시 계산
+        const imageRect = floorMapImage.getBoundingClientRect();
+        const containerRect = mapContainer.getBoundingClientRect();
+        const offsetX = imageRect.left - containerRect.left;
+        const offsetY = imageRect.top - containerRect.top;
+
+        // left, top 스타일에서 현재 위치를 읽어옴
+        const currentPos = {
+            x: parseFloat(marker.style.left || 0),
+            y: parseFloat(marker.style.top || 0)
         };
-        const targetPos = { x: nextPoint.pixel_x * scale, y: nextPoint.pixel_y * scale };
+        // 목표 위치도 오프셋과 스케일을 적용한 최종 left, top 값으로 계산
+        const targetPos = { 
+            x: offsetX + nextPoint.pixel_x * scale, 
+            y: offsetY + nextPoint.pixel_y * scale 
+        };
+
         const dx = targetPos.x - currentPos.x;
         const dy = targetPos.y - currentPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < markerSpeed) {
-            updateMarkerPosition(nextPoint.pixel_x, nextPoint.pixel_y);
             pathIndex++;
+            updateScaleAndPositions(); // 다음 노드 위치로 정확히 이동
+            animationFrameId = requestAnimationFrame(animateMarker); // 다음 지점으로 애니메이션 계속
         } else {
+            // left, top 값을 직접 수정하여 마커 이동
             const moveX = currentPos.x + (dx / distance) * markerSpeed;
             const moveY = currentPos.y + (dy / distance) * markerSpeed;
-            marker.style.transform = `translateX(${moveX}px) translateY(${moveY}px)`;
+            marker.style.left = `${moveX}px`;
+            marker.style.top = `${moveY}px`;
+            animationFrameId = requestAnimationFrame(animateMarker); // 다음 프레임 호출
         }
-        animationFrameId = requestAnimationFrame(animateMarker);
     };
 
     // --- 경로 그리기 함수에 스케일 적용 ---
     const drawPath = (currentFloorPath) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (currentFloorPath.length < 2) return;
+
+        ctx.save(); // 현재 캔버스 상태 저장
+        ctx.scale(scale, scale); // 캔버스 자체에 스케일 적용
+
         ctx.beginPath();
         ctx.moveTo(currentFloorPath[0].pixel_x, currentFloorPath[0].pixel_y);
         currentFloorPath.slice(1).forEach(node => {
             ctx.lineTo(node.pixel_x, node.pixel_y);
         });
+
         ctx.strokeStyle = '#3498db';
-        ctx.lineWidth = 7; // 선 굵기는 고정 (스케일링된 캔버스에 원본 해상도로 그리므로)
+        ctx.lineWidth = 7 / scale; // 스케일이 작아져도 선 굵기를 유지
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.setLineDash([10, 10]);
+        ctx.setLineDash([10 / scale, 10 / scale]); // 점선 간격도 유지
         ctx.stroke();
+
+        ctx.restore(); // 저장했던 캔버스 상태(스케일) 복원
     };
+
 
 
     const handleTransition = (transitionNode) => {
