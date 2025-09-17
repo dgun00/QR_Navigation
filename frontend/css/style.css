@@ -1,0 +1,254 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --light-text: #ffffff;
+    --dark-text: #333333;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    /* 1. 배경 이미지 설정 */
+    background-image: 
+        /* 2. 반투명 검정 필터 (가독성을 위해) */
+        linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+        /* 3. 실제 배경 이미지 파일 경로 */
+        url('../images/main_background.jpg');
+
+    background-size: cover;          /* 이미지가 화면을 가득 채우도록 비율 유지하며 확대/축소 */
+    background-position: center;     /* 이미지가 항상 중앙에 위치하도록 설정 */
+    background-repeat: no-repeat;    /* 이미지가 반복되지 않도록 설정 */
+    background-attachment: fixed;    /* 스크롤 시 배경 이미지가 고정되도록 설정 (시차 효과) */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 모든 자식 요소를 가운데 정렬 */
+    padding: 2rem;
+    width: 100%;
+}
+
+.main-header  {
+    color: var(--light-text);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+/* --- 건물 카드 그리드 --- */
+.building-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    width: 90%;
+    max-width: 800px; /* 그리드의 최대 너비 설정 */
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+/* --- 카드 공통 스타일 --- */
+.building-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+}
+
+.building-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.building-card h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+.floor-buttons button {
+    background: var(--primary-color);
+    color: var(--light-text);
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.floor-buttons button:hover {
+    background: #2980b9;
+}
+
+/* --- 층별 지도 화면 스타일 --- */
+.floor-container {
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+#map-container {
+    flex-grow: 1;
+    position: relative;
+    overflow: auto;
+}
+
+#controls {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    position: relative; /* search-results의 기준점 */
+}
+
+.location-inputs {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.input-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-right: 2rem;
+}
+
+.input-wrapper label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+    padding-left: 15px;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    outline: none;
+    
+}
+
+#swap-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    cursor: pointer;
+
+    margin-top: 1.5rem; /* 라벨과 높이 맞춤 */
+}
+
+
+#find-path-btn {
+    width: 100%;
+    background: var(--secondary-color);
+    color: var(--light-text);
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+#find-path-btn:hover {
+    background: #27ae60;
+}
+
+
+/* --- 검색 결과 스타일 (이전과 동일, bottom 위치 조정) --- */
+#search-results {
+    position: absolute;
+    bottom: calc(100% - 70px); /* 컨트롤 패널 높이에 맞게 조정 */
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    display: none;
+    z-index: 10;
+}
+
+/* css/style.css 파일 하단에 이 코드를 추가하세요. */
+
+/* --- 주요 시설 바로가기 섹션 스타일 (새로 추가) --- */
+.quick-access-section {
+    width: 90%;
+    max-width: 800px; /* 건물 그리드와 최대 너비를 맞춤 */
+    margin-top: 2rem; /* 건물 카드 섹션과의 상단 여백 */
+}
+
+
+/* --- 아이콘 그리드 및 버튼 스타일 (이전과 동일) --- */
+.icon-grid {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.icon-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Roboto', sans-serif;
+    color: var(--dark-text);
+    transition: color 0.3s ease;
+}
+
+.icon-btn:hover {
+    color: var(--primary-color);
+}
+
+.icon-btn .icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #f0f4f8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.icon-btn:hover .icon-circle {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    transform: scale(1.1);
+}
+
+.icon-btn span {
+    font-size: 0.9rem;
+    font-weight: 400;
+}
