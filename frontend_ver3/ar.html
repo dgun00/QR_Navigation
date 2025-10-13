@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR 이미지 스캐너</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar-nft.js"></script>
+    <style>
+        body, html { margin: 0; overflow: hidden; }
+        a-scene { width: 100%; height: 100%; }
+        #status-text {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: sans-serif;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="status-text">카메라로 이미지를 스캔해주세요...</div>
+    <a-scene
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="antialias: true; precision: highp; logarithmicDepthBuffer: true;"
+      arjs="trackingMethod: best;
+            sourceType: webcam;
+            sourceWidth:1280; sourceHeight:720;
+            displayWidth:1280; displayHeight:720;
+            debugUIEnabled: false;"
+    >
+        <a-nft
+            type='nft'
+            url='markers/ar-target-image'
+            id='marker1'
+            smooth='true'
+            smoothCount='10'
+            smoothTolerance='0.01'
+            smoothThreshold='5'>
+        </a-nft>
+
+        <a-nft
+            type='nft'
+            url='markers/ar-target-image2'
+            id='marker2'
+            smooth='true'
+            smoothCount='10'
+            smoothTolerance='0.01'
+            smoothThreshold='5'>
+        </a-nft>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+    <script src="js/ar.js"></script>
+</body>
+</html>
