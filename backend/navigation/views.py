@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Node, Edge
 from .serializers import NodeSerializer
-#from .pathfinding import find_shortest_path
+from .pathfinding import find_shortest_path
 
 # QR ID로 특정 노드 정보 가져오기
 class NodeByQrIdView(APIView):
@@ -38,25 +38,19 @@ class PathfindView(APIView):
         if not start_node_id or not end_node_id:
             return Response({"error": "출발지와 도착지 노드 ID를 모두 제공해야 합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # DB에서 모든 노드와 엣지 정보를 가져와 그래프 구성
-        nodes = Node.objects.all()
-        edges = Edge.objects.all()
+        # DB에서 모든 노드와 엣지 정보를 가져옴 (QuerySet)
+        all_nodes = Node.objects.all()
+        all_edges = Edge.objects.select_related('start_node', 'end_node').all()
 
-        graph = {
-            node.id: {'pos': (node.pixel_x, node.pixel_y), 'neighbors': {}}
-            for node in nodes
-        }
-        for edge in edges:
-            # 양방향 그래프로 구성 (만약 길이 일방통행이 아니라면)
-            graph[edge.start_node_id]['neighbors'][edge.end_node_id] = edge.weight
-            graph[edge.end_node_id]['neighbors'][edge.start_node_id] = edge.weight
+        # find_shortest_path 함수에 4개의 인자를 올바르게 전달합니다.
+        result = find_shortest_path(start_node_id, end_node_id, all_nodes, all_edges)
         
-        # 경로 탐색 알고리즘 실행
-        path_node_ids = find_shortest_path(graph, start_node_id, end_node_id)
+        # 결과에 'error' 키가 있으면, 경로 탐색 실패 응답
+        if result.get("error"):
+            return Response({"error": result["error"]}, status=status.HTTP_404_NOT_FOUND)
         
-        if path_node_ids:
-            # 경로에 해당하는 노드 객체들을 순서대로 가져옴
-            path_nodes = sorted(Node.objects.filter(id__in=path_node_ids), key=lambda x: path_node_ids.index(x.id))
+        # 경로 탐색 성공 시, 결과 그대로 반환
+        return Response(result, status=status.HTTP_200_OK)
             serializer = NodeSerializer(path_nodes, many=True)
             return Response(serializer.data)
         else:
