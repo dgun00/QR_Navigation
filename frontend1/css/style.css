@@ -15,18 +15,13 @@ body, html {
 }
 
 body {
-    /* 1. 배경 이미지 설정 */
-    background-image: 
-        /* 2. 반투명 검정 필터 (가독성을 위해) */
+    background-image:
         linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-        /* 3. 실제 배경 이미지 파일 경로 */
         url('../images/main_background.jpg');
-
-    background-size: cover;          /* 이미지가 화면을 가득 채우도록 비율 유지하며 확대/축소 */
-    background-position: center;     /* 이미지가 항상 중앙에 위치하도록 설정 */
-    background-repeat: no-repeat;    /* 이미지가 반복되지 않도록 설정 */
-    background-attachment: fixed;    /* 스크롤 시 배경 이미지가 고정되도록 설정 (시차 효과) */
-
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -35,7 +30,7 @@ body {
 .main-container {
     display: flex;
     flex-direction: column;
-    align-items: center; /* 모든 자식 요소를 가운데 정렬 */
+    align-items: center;
     padding: 2rem;
     width: 100%;
 }
@@ -48,18 +43,16 @@ body {
     text-align: center;
 }
 
-/* --- 건물 카드 그리드 --- */
 .building-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     width: 90%;
-    max-width: 800px; /* 그리드의 최대 너비 설정 */
+    max-width: 800px;
     margin-left: 2rem;
     margin-right: 2rem;
 }
 
-/* --- 카드 공통 스타일 --- */
 .building-card {
     background: white;
     padding: 1.5rem;
@@ -99,26 +92,49 @@ body {
 .floor-container {
     display: flex;
     flex-direction: column;
-    width: 95%;
-    max-width: 1200px;
-    height: 90vh;
+    width: 100%;
+    height: 100%;
     background: white;
-    border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     overflow: hidden;
 }
 
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- 지도 컨테이너 스타일 --- */
 #map-container {
     flex-grow: 1;
+    position: relative; /* 마커의 기준점 */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- 이미지, 캔버스, 마커 관계 설정 --- */
+#map-container > img {
     position: relative;
-    overflow: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+#map-container > canvas,
+#map-container > #marker {
+    position: absolute;
+    /* JS에서 transform으로 위치 제어 */
 }
 
 #controls {
     padding: 1rem;
     background: #f8f9fa;
     border-top: 1px solid #e9ecef;
-    position: relative; /* search-results의 기준점 */
+    position: relative;
+    flex-shrink: 0;
 }
 
 .location-inputs {
@@ -148,7 +164,6 @@ body {
     border: 1px solid #ccc;
     border-radius: 25px;
     outline: none;
-    
 }
 
 #swap-btn {
@@ -157,10 +172,8 @@ body {
     font-size: 1.2rem;
     color: var(--primary-color);
     cursor: pointer;
-
-    margin-top: 1.5rem; /* 라벨과 높이 맞춤 */
+    margin-top: 1.5rem;
 }
-
 
 #find-path-btn {
     width: 100%;
@@ -178,11 +191,9 @@ body {
     background: #27ae60;
 }
 
-
-/* --- 검색 결과 스타일 (이전과 동일, bottom 위치 조정) --- */
 #search-results {
     position: absolute;
-    bottom: calc(100% - 70px); /* 컨트롤 패널 높이에 맞게 조정 */
+    bottom: calc(100% - 70px);
     left: 10px;
     right: 10px;
     width: auto;
@@ -195,17 +206,126 @@ body {
     z-index: 10;
 }
 
-/* css/style.css 파일 하단에 이 코드를 추가하세요. */
-
-/* --- 주요 시설 바로가기 섹션 스타일 (새로 추가) --- */
-.quick-access-section {
-    width: 90%;
-    max-width: 800px; /* 건물 그리드와 최대 너비를 맞춤 */
-    margin-top: 2rem; /* 건물 카드 섹션과의 상단 여백 */
+/* --- 상단 네비게이션 패널 스타일 --- */
+#nav-panel {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
+#home-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    background-color: var(--secondary-color);
+    color: var(--light-text);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
 
-/* --- 아이콘 그리드 및 버튼 스타일 (이전과 동일) --- */
+#home-btn:hover {
+    background-color: #27ae60;
+}
+
+#floor-selector {
+    position: relative;
+    flex-grow: 1;
+    margin-left: 1rem;
+}
+
+#building-title-btn {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    color: var(--dark-text);
+    text-align: center;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#building-title-btn::after {
+    content: ' ▾';
+}
+
+#floor-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    max-height: 250px;
+    z-index: 20;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+}
+
+#floor-list.show {
+    display: block;
+}
+
+#floor-list .building-header {
+    padding: 0.5rem 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+#floor-list .building-header:first-child {
+    margin-top: 0;
+}
+
+#floor-list li button {
+    width: 100%;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+#floor-list li button:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+#floor-list li button.active {
+    background-color: var(--primary-color);
+    color: var(--light-text);
+    border-color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* 기타 스타일 */
+.quick-access-section {
+    width: 90%;
+    max-width: 800px;
+    margin-top: 2rem;
+}
 .icon-grid {
     display: flex;
     justify-content: space-around;
@@ -224,11 +344,9 @@ body {
     color: var(--dark-text);
     transition: color 0.3s ease;
 }
-
 .icon-btn:hover {
     color: var(--primary-color);
 }
-
 .icon-btn .icon-circle {
     width: 60px;
     height: 60px;
@@ -241,14 +359,49 @@ body {
     color: var(--primary-color);
     transition: background-color 0.3s ease, transform 0.3s ease;
 }
-
 .icon-btn:hover .icon-circle {
     background-color: var(--primary-color);
     color: var(--light-text);
     transform: scale(1.1);
 }
-
 .icon-btn span {
     font-size: 0.9rem;
     font-weight: 400;
+}
+
+/* --- 현재 위치 마커 스타일 --- */
+#marker {
+    width: 20px;
+    height: 20px;
+    background-color: #3498db; /* 파란색 배경 */
+    border-radius: 50%; /* 원 모양 */
+    border: 3px solid #ffffff; /* 흰색 테두리 */
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.8); /* 파란색 그림자 */
+    
+    /* JavaScript가 transform으로 위치를 제어하므로 초기 transform 제거 */
+    /* transform: translate(-50%, -50%); (제거 또는 주석 처리) */
+    
+    /* 깜빡이는 애니메이션 효과 적용 */
+    animation: pulse 1.5s infinite;
+    
+    display: none; /* 평소에는 숨겨둠 */
+    z-index: 5; /* 지도 위에 표시 */
+    pointer-events: none; /* 클릭 방해 방지 */
+}
+
+/* 깜빡이는 효과를 위한 애니메이션 정의 (수정됨) */
+@keyframes pulse {
+    0% {
+        /* ▼▼▼ (핵심 수정) translate(-50%, -50%) 제거 ▼▼▼ */
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(52, 152, 219, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+    }
 }
