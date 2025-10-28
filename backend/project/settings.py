@@ -11,7 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,12 +21,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2!9(u5c4l$(uncjt@9i_cc2q1_rtxf=7dajt@ehzzhvn^gbx54'
+#SECRET_KEY = 'django-insecure-2!9(u5c4l$(uncjt@9i_cc2q1_rtxf=7dajt@ehzzhvn^gbx54'
+# Render의 환경 변수에서 SECRET_KEY를 읽어옵니다.
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+#DEBUG = True
+# Render 환경에서는 DEBUG가 False가 됩니다.
+DEBUG = os.environ.get('RENDER') != 'true'
 
+#ALLOWED_HOSTS = ['*']
 ALLOWED_HOSTS = []
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# 로컬 테스트용 (선택 사항)
+if not RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append('localhost')
+    ALLOWED_HOSTS.append('127.0.0.1')
 
 
 # Application definition
@@ -55,6 +70,14 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOWED_ORIGINS = [
+#     # 여기에 프론트엔드를 배포할 Render 주소를 넣으세요.
+#     # 예: 'https://my-frontend.onrender.com', 
+    
+#     # 로컬에서 테스트하기 위함 (선택 사항)
+#     'http://localhost:3000',
+#     'http://127.0.0.1:3000',
+# ]
 
 ROOT_URLCONF = 'project.urls'
 
@@ -79,12 +102,20 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        # DATABASE_URL 환경 변수가 없으면(로컬이면) sqlite3를 사용
+        default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}'
+    )
 }
+
+
 
 
 # Password validation

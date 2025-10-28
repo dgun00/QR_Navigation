@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Node, Edge
 from .serializers import NodeSerializer
-#from .pathfinding import find_shortest_path
+from .pathfinding import find_shortest_path
 
 # QR ID로 특정 노드 정보 가져오기
 class NodeByQrIdView(APIView):

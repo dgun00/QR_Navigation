@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- 기본 설정 및 DOM 요소 가져오기 ---
-    const API_BASE_URL = 'http://127.0.0.1:8000/api/navigation';
+    const API_BASE_URL = 'https://325721254205.ngrok-free.app/api/navigation';
     const buildingTitleBtn = document.getElementById('building-title-btn');
     const floorList = document.getElementById('floor-list');
     const mapContainer = document.getElementById('map-container');
@@ -12,60 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResults = document.getElementById('search-results');
     const canvas = document.getElementById('path-canvas');
     const ctx = canvas.getContext('2d');
+    const arScanBtn = document.getElementById('ar-scan-btn');
 
-
-        // LinearAccelerationSensor 사용 예시 (PDR에 더 적합)
-    if ('LinearAccelerationSensor' in window) {
-        const frequency = 50; // 초당 50회 데이터 수신 설정 (Hz)
-        
-        try {
-            const sensor = new LinearAccelerationSensor({ frequency: frequency });
-            
-            sensor.onreading = () => {
-                // 🚨 핵심: 이 부분에서 실시간 가속도 데이터에 접근합니다.
-                const acc_x = sensor.x;
-                const acc_y = sensor.y;
-                const acc_z = sensor.z;
-                
-                // Step 2. PDR 알고리즘을 호출하여 위치 업데이트
-                updatePosition(acc_x, acc_y, acc_z, 1 / frequency); 
-            };
-            
-            sensor.onerror = (event) => {
-                console.error('Sensor error:', event.error.name);
-                // 사용자 권한 거부 (NotAllowedError) 또는 센서 연결 불가 (NotReadableError) 처리
-            };
-            
-            sensor.start();
-            
-        } catch (error) {
-            console.error('Sensor API 초기화 오류:', error.name);
-        }
-    } else {
-        console.warn('LinearAccelerationSensor를 지원하지 않는 브라우저입니다.');
-    }
-    // let current_x = 0;
-    // let current_y = 0;
-
-    // function updatePosition(acc_x, acc_y, acc_z, deltaTime) {
-    //     // 1. 걸음 감지 (Step Detection)
-    //     // 예: Z축 가속도의 피크/밸리 검출, 저주파 필터링 등
-    //     if (isStepDetected(acc_z)) {
-    //         // 2. 보폭 추정 (Step Length Estimation)
-    //         const stepLength = estimateStepLength(acc_z);
-
-    //         // 3. 방향 추정 (Heading Estimation) - 자이로/지자기 센서 데이터 필요
-    //         const headingAngle = getHeading(); // (별도의 Gyroscope/Magnetometer API로 구현)
-
-    //         // 4. 위치 업데이트 (Dead Reckoning)
-    //         current_x += stepLength * Math.sin(headingAngle);
-    //         current_y += stepLength * Math.cos(headingAngle);
-
-    //         // 프론트엔드(지도)에 새로운 위치 (current_x, current_y) 표시
-    //         console.log(current_x, current_y);
-    //     }
-    // }
-    
     const buildingsData = {
         'A12': ['1F', '2F', '3F', '4F'],
         'A13': ['1F', '2F', '3F', '4F']
@@ -79,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let animationFrameId = null;
     let fullPath = [];
     let pathIndex = 0;
-    let scale = 1; // --- 이미지 스케일 변수 ---
+    let scale = 1;
     const markerSpeed = 2;
 
     const params = new URLSearchParams(window.location.search);
@@ -87,7 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const floor = params.get('floor');
     const qrId = params.get('qr_id');
 
-    // --- 지도 설정 및 초기화  ---
+    // QR ID로 노드 정보를 가져오는 함수
+    const fetchNodeByQrId = async (qrId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/nodes/qr/${qrId}/`);
+            if (!response.ok) throw new Error('해당 QR ID의 노드를 찾을 수 없습니다.');
+            const node = await response.json();
+            startNode = node;
+            startInput.value = node.name;
+            startInput.disabled = true;
+            updateScaleAndPositions();
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
+    };
+    
+    // --- 지도 설정 및 초기화 ---
     const setupMap = () => {
         const existingImg = mapContainer.querySelector('img');
         if (existingImg) existingImg.remove();
@@ -97,12 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
         floorMapImage.src = mapImageUrl;
 
         floorMapImage.onload = () => {
-            // 캔버스 해상도는 원본 이미지 크기로 설정 (고화질 유지)
             canvas.width = floorMapImage.naturalWidth;
             canvas.height = floorMapImage.naturalHeight;
             mapContainer.appendChild(floorMapImage);
 
-            // 초기 스케일 계산 및 위치 조정
             updateScaleAndPositions();
 
             if (qrId) fetchNodeByQrId(qrId);
@@ -120,142 +82,36 @@ document.addEventListener('DOMContentLoaded', () => {
             mapContainer.textContent = '지도 이미지를 불러올 수 없습니다. images 폴더를 확인해주세요.';
         };
     };
-    
 
-    const fetchNodeByQrId = async (qrId) => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/nodes/qr/${qrId}/`);
-            if (!response.ok) throw new Error('해당 QR ID의 노드를 찾을 수 없습니다.');
-            const node = await response.json();
-            startNode = node;
-            startInput.value = node.name;
-            startInput.disabled = true;
-            updateScaleAndPositions();
-        } catch (error) {
-            console.error(error); alert(error.message);
-        }
-    };
-
-
-    // // --- 마커 위치 업데이트 함수에 스케일 적용 ---
-    // const updateMarkerPosition = (x, y) => {
-    //     // const scaledX = x * scale;
-    //     // const scaledY = y * scale;
-    //     // marker.style.transform = `translateX(${scaledX}px) translateY(${scaledY}px)`;
-    //     marker.style.left = `${x * scale}px`;
-    //     marker.style.top = `${y * scale}px`; // 9/17 수정
-
-    //     marker.style.display = 'block';
-    // }; // 9/17 주석처리
-
-
-    // // --- 스케일 계산 및 캔버스/마커 위치 조정 함수 ---
-    // const updateScaleAndPositions = () => {
-    //     if (!floorMapImage || !floorMapImage.naturalWidth) return;
-
-    //     // 1. 스케일 계산
-    //     scale = floorMapImage.clientWidth / floorMapImage.naturalWidth;
-
-    //     // 2. 캔버스와 마커의 위치/크기를 이미지에 맞춤
-    //     const rect = floorMapImage.getBoundingClientRect();
-    //     const containerRect = mapContainer.getBoundingClientRect();
-
-    //     // 3. 컨테이너 내부에서 이미지의 실제 시작 위치(오프셋) 계산 (가장 중요한 부분)
-    //     const offsetX = imageRect.left - containerRect.left;
-    //     const offsetY = imageRect.top - containerRect.top;
-    //       // 4. 캔버스 위치/크기를 이미지와 정확히 일치시키기
-    //     canvas.style.left = `${offsetX}px`;
-    //     canvas.style.top = `${offsetY}px`;
-    //     canvas.style.width = `${imageRect.width}px`;
-    //     canvas.style.height = `${imageRect.height}px`;
-
-    //     // 5. 현재 상태에 맞는 노드(출발지 또는 경로상 노드) 찾기
-    //     const currentNode = (fullPath.length > 0) ? fullPath[pathIndex] : startNode;
-
-    //     // 6. 경로와 마커 위치를 최종적으로 업데이트
-    //     if (fullPath.length > 0) {
-    //         // 경로가 있으면 경로를 다시 그림
-    //         const currentFloorPath = fullPath.filter(node => node.building === building && node.floor === floor);
-    //         drawPath(currentFloorPath);
-    //     }
-        
-    //     if (currentNode) {
-    //         // (핵심) 최종 마커 위치 = 이미지 오프셋 + (노드의 원본 좌표 * 스케일)
-    //         marker.style.left = `${offsetX + currentNode.pixel_x * scale}px`;
-    //         marker.style.top = `${offsetY + currentNode.pixel_y * scale}px`;
-    //         marker.style.display = 'block';
-    //     }
-
-    //     // canvas.style.left = `${rect.left - containerRect.left}px`;
-    //     // canvas.style.top = `${rect.top - containerRect.top}px`;
-    //     // canvas.style.width = `${rect.width}px`;
-    //     // canvas.style.height = `${rect.height}px`;
-
-    //     // marker.style.left = canvas.style.left;
-    //     // marker.style.top = canvas.style.top; /*9/17 주석처리*/
-
-    //     // // 3. 스케일 변경에 따라 경로 다시 그리기
-    //     // if (fullPath.length > 0) {
-    //     //     const currentFloorPath = fullPath.filter(node => node.building === building && node.floor === floor);
-    //     //     drawPath(currentFloorPath);
-    //     //     if(pathIndex > 0) {
-    //     //          updateMarkerPosition(fullPath[pathIndex].pixel_x, fullPath[pathIndex].pixel_y);
-    //     //     }
-    //     // }
-        
-      
-    // };
-    // floor.js
-
-    // --- 1. 이 함수를 아래 코드로 교체하세요 ---
     const updateScaleAndPositions = () => {
-        // 이미지 로드 전이라면 함수 종료
         if (!floorMapImage || !floorMapImage.naturalWidth) return;
-
-        // 1. 스케일(비율) 계산
         scale = floorMapImage.clientWidth / floorMapImage.naturalWidth;
-
-        // 2. 지도 이미지와 부모 컨테이너의 현재 위치/크기 정보 가져오기
-        const imageRect = floorMapImage.getBoundingClientRect(); // ★★★ 변수명을 rect -> imageRect 로 수정 ★★★
+        const imageRect = floorMapImage.getBoundingClientRect();
         const containerRect = mapContainer.getBoundingClientRect();
-
-        // 3. 컨테이너 내부에서 이미지의 실제 시작 위치(오프셋) 계산
         const offsetX = imageRect.left - containerRect.left;
         const offsetY = imageRect.top - containerRect.top;
-
-        // 4. 캔버스 위치/크기를 이미지와 정확히 일치시키기
         canvas.style.left = `${offsetX}px`;
         canvas.style.top = `${offsetY}px`;
         canvas.style.width = `${imageRect.width}px`;
         canvas.style.height = `${imageRect.height}px`;
-
-        // 5. 현재 상태에 맞는 노드(출발지 또는 경로상 노드) 찾기
         const currentNode = (fullPath.length > 0) ? fullPath[pathIndex] : startNode;
-
-        // 6. 경로와 마커 위치를 최종적으로 업데이트
         if (fullPath.length > 0) {
-            // 경로가 있으면 경로를 다시 그림
             const currentFloorPath = fullPath.filter(node => node.building === building && node.floor === floor);
             drawPath(currentFloorPath);
         }
-        
         if (currentNode) {
-            // (핵심) 최종 마커 위치 = 이미지 오프셋 + (노드의 원본 좌표 * 스케일)
             marker.style.left = `${offsetX + currentNode.pixel_x * scale}px`;
             marker.style.top = `${offsetY + currentNode.pixel_y * scale}px`;
             marker.style.display = 'block';
         }
     };
 
-
     // --- 길찾기 ---
     findPathBtn.addEventListener('click', async () => {
-
         if (!startNode || !destinationNode) {
             alert('출발지와 목적지를 모두 설정해주세요.'); return;
         }
-        
-        if (startNode.name === destinationNode.name) {
+        if (startNode.id === destinationNode.id) {
             alert('출발지와 목적지가 같습니다.'); return;
         }
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -263,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_BASE_URL}/pathfind/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ start_node_id: startNode.name, end_node_id: destinationNode.name })
+                body: JSON.stringify({ start_node_id: startNode.id, end_node_id: destinationNode.id })
             });
             if (!response.ok) throw new Error('경로를 찾을 수 없습니다.');
             fullPath = await response.json();
@@ -280,9 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         drawPath(currentFloorPath);
         pathIndex = fullPath.findIndex(node => node.building === building && node.floor === floor);
         if (pathIndex === -1) return;
-        const startPos = fullPath[pathIndex];
-        // updateMarkerPosition(startPos.pixel_x, startPos.pixel_y);// 9/17수정
-        updateScaleAndPositions(); // 9/17 추가
+        updateScaleAndPositions();
         animateMarker();
     };
 
@@ -298,22 +152,19 @@ document.addEventListener('DOMContentLoaded', () => {
             handleTransition(currentPoint);
             return;
         }
-
-        // 현재 마커의 위치(오프셋 포함)를 다시 계산
+        
         const imageRect = floorMapImage.getBoundingClientRect();
         const containerRect = mapContainer.getBoundingClientRect();
         const offsetX = imageRect.left - containerRect.left;
         const offsetY = imageRect.top - containerRect.top;
 
-        // left, top 스타일에서 현재 위치를 읽어옴
         const currentPos = {
             x: parseFloat(marker.style.left || 0),
             y: parseFloat(marker.style.top || 0)
         };
-        // 목표 위치도 오프셋과 스케일을 적용한 최종 left, top 값으로 계산
-        const targetPos = { 
-            x: offsetX + nextPoint.pixel_x * scale, 
-            y: offsetY + nextPoint.pixel_y * scale 
+        const targetPos = {
+            x: offsetX + nextPoint.pixel_x * scale,
+            y: offsetY + nextPoint.pixel_y * scale
         };
 
         const dx = targetPos.x - currentPos.x;
@@ -322,25 +173,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (distance < markerSpeed) {
             pathIndex++;
-            updateScaleAndPositions(); // 다음 노드 위치로 정확히 이동
-            animationFrameId = requestAnimationFrame(animateMarker); // 다음 지점으로 애니메이션 계속
+            updateScaleAndPositions();
+            animationFrameId = requestAnimationFrame(animateMarker);
         } else {
-            // left, top 값을 직접 수정하여 마커 이동
             const moveX = currentPos.x + (dx / distance) * markerSpeed;
             const moveY = currentPos.y + (dy / distance) * markerSpeed;
             marker.style.left = `${moveX}px`;
             marker.style.top = `${moveY}px`;
-            animationFrameId = requestAnimationFrame(animateMarker); // 다음 프레임 호출
+            animationFrameId = requestAnimationFrame(animateMarker);
         }
     };
 
-    // --- 경로 그리기 함수에 스케일 적용 ---
     const drawPath = (currentFloorPath) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (currentFloorPath.length < 2) return;
 
-        ctx.save(); // 현재 캔버스 상태 저장
-        ctx.scale(scale, scale); // 캔버스 자체에 스케일 적용
+        ctx.save();
+        ctx.scale(scale, scale);
 
         ctx.beginPath();
         ctx.moveTo(currentFloorPath[0].pixel_x, currentFloorPath[0].pixel_y);
@@ -349,16 +198,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         ctx.strokeStyle = '#3498db';
-        ctx.lineWidth = 7 / scale; // 스케일이 작아져도 선 굵기를 유지
+        ctx.lineWidth = 7 / scale;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.setLineDash([10 / scale, 10 / scale]); // 점선 간격도 유지
+        ctx.setLineDash([10 / scale, 10 / scale]);
         ctx.stroke();
 
-        ctx.restore(); // 저장했던 캔버스 상태(스케일) 복원
+        ctx.restore();
     };
-
-
 
     const handleTransition = (transitionNode) => {
         const nextInfo = transitionNode.transition_to;
@@ -369,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `floor.html?building=${nextInfo.building}&floor=${nextInfo.floor}`;
     };
     
-
     const handleSearch = async (event) => {
         const query = event.target.value;
         if (!query) { searchResults.style.display = 'none'; return; }
@@ -426,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- 이벤트 리스너 설정 ---
     startInput.addEventListener('focus', () => activeInput = startInput);
     destinationInput.addEventListener('focus', () => activeInput = destinationInput);
     startInput.addEventListener('input', handleSearch);
@@ -459,6 +306,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 창 크기 변경 시 스케일 다시 계산 ---
+    // --- AR 스캔 버튼 이벤트 ---
+    arScanBtn.addEventListener('click', () => {
+        if (startInput.disabled) {
+            alert('출발지가 이미 QR/이미지 스캔으로 설정되었습니다. 새로고침 후 다시 시도해주세요.');
+            return;
+        }
+        // 새 창 열기
+        window.open('ar.html', 'AR Scanner', 'width=800,height=600');
+    });
+    
+    // --- AR 창으로부터 메시지 수신 ---
+    window.addEventListener('message', (event) => {
+        const { type, data } = event.data;
+
+        if (type === 'ar-scan-success') {
+            const node = data;
+            startNode = node;
+            startInput.value = `이미지 인식: ${node.name}`;
+            startInput.disabled = true;
+            updateScaleAndPositions();
+        }
+    });
+
     window.addEventListener('resize', updateScaleAndPositions);
 });
