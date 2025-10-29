@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- 기본 설정 및 DOM 요소 가져오기 ---
-    const API_BASE_URL = 'https://qr-navigation-backend.onrender.com';
+    const API_BASE_URL = 'https://qr-navigation-backend.onrender.com/api/navigation';
     const buildingTitleBtn = document.getElementById('building-title-btn');
     const floorList = document.getElementById('floor-list');
     const mapContainer = document.getElementById('map-container');
