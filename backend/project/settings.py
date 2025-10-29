@@ -21,26 +21,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'django-insecure-2!9(u5c4l$(uncjt@9i_cc2q1_rtxf=7dajt@ehzzhvn^gbx54'
-# Render의 환경 변수에서 SECRET_KEY를 읽어옵니다.
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-2!9(u5c4l$(uncjt@9i_cc2q1_rtxf=7dajt@ehzzhvn^gbx54'
+# # Render의 환경 변수에서 SECRET_KEY를 읽어옵니다.
+# SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-#DEBUG = True
-# Render 환경에서는 DEBUG가 False가 됩니다.
-DEBUG = os.environ.get('RENDER') != 'true'
+DEBUG = True
+# # Render 환경에서는 DEBUG가 False가 됩니다.
+# DEBUG = os.environ.get('RENDER') != 'true'
 
-#ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = []
 
-RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+# RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+# if RENDER_EXTERNAL_HOSTNAME:
+#     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
-# 로컬 테스트용 (선택 사항)
-if not RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append('localhost')
-    ALLOWED_HOSTS.append('127.0.0.1')
+# # 로컬 테스트용 (선택 사항)
+# if not RENDER_EXTERNAL_HOSTNAME:
+#     ALLOWED_HOSTS.append('localhost')
+#     ALLOWED_HOSTS.append('127.0.0.1')
 
 
 # Application definition
@@ -102,18 +102,18 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 DATABASES = {
-    'default': dj_database_url.config(
-        # DATABASE_URL 환경 변수가 없으면(로컬이면) sqlite3를 사용
-        default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}'
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         # DATABASE_URL 환경 변수가 없으면(로컬이면) sqlite3를 사용
+#         default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}'
+#     )
+# }
 
 
 

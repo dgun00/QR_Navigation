@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- 기본 설정 및 DOM 요소 가져오기 ---
-    const API_BASE_URL = 'https://325721254205.ngrok-free.app/api/navigation';
+    const API_BASE_URL = 'http://127.0.0.1:8000/api/navigation';
     const buildingTitleBtn = document.getElementById('building-title-btn');
     const floorList = document.getElementById('floor-list');
     const mapContainer = document.getElementById('map-container');
