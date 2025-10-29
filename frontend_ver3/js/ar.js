@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const API_BASE_URL = 'https://325721254205.ngrok-free.app/api/navigation';
+    const API_BASE_URL = 'https://qr-navigation-backend.onrender.com';
     const statusText = document.getElementById('status-text');
     let isProcessing = false;
 
