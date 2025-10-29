@@ -79,7 +79,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'http://127.0.0.1:3000',
 # ]
 
-ROOT_URLCONF = 'project.urls'
+ROOT_URLCONF = 'backend.project.urls'
 
 TEMPLATES = [
     {
