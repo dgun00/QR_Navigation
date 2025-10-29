@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- 기본 설정 및 DOM 요소 가져오기 ---
-    const API_BASE_URL = 'http://127.0.0.1:8000/api/navigation';
+    const API_BASE_URL = 'https://qr-navigation-backend.onrender.com';
 
     const mapContainer = document.getElementById('map-container');
     const marker = document.getElementById('marker');
