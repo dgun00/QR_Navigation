@@ -4,7 +4,7 @@ from .models import Node, Edge
 
 @admin.register(Node)
 class NodeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'qr_id', 'building', 'floor', 'node_type', 'pixel_x', 'pixel_y')
+    list_display = ('id','name', 'qr_id', 'building', 'floor', 'node_type', 'pixel_x', 'pixel_y')
     list_filter = ('floor','building', 'node_type')
     search_fields = ('name', 'description', 'qr_id')
 
