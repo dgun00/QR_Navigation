@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!startNode || !destinationNode) {
             alert('출발지와 목적지를 모두 설정해주세요.'); return;
         }
-        if (startNode.id === destinationNode.id) {
+        if (startNode.qr_id === destinationNode.qr_id) {
             alert('출발지와 목적지가 같습니다.'); return;
         }
         if (animationFrameId) cancelAnimationFrame(animationFrameId);
